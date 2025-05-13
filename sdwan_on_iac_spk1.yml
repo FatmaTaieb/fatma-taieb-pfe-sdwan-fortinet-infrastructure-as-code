@@ -1,0 +1,84 @@
+---
+- name: Configure SD-WAN on Spoke FortiGate (iac-spk1)
+  hosts: iac-spk1
+  connection: httpapi
+  gather_facts: no
+  collections:
+    - fortinet.fortios
+
+  vars:
+    vdom: "root"
+    ansible_httpapi_use_ssl: no
+    ansible_httpapi_validate_certs: no
+    ansible_httpapi_port: 80
+
+  tasks:
+    - name: Create firewall address for sub_172.30.0.0/24
+      fortinet.fortios.fortios_firewall_address:
+        vdom: "{{ vdom }}"
+        access_token: "{{ fortios_access_token }}"
+        state: "present"
+        firewall_address:
+          name: "sub_172.30.0.0/24"
+          subnet: "172.30.0.0 255.255.255.0"
+          allow_routing: "enable"
+
+    - name: Create firewall address for sub_192.168.233.0
+      fortinet.fortios.fortios_firewall_address:
+        vdom: "{{ vdom }}"
+        access_token: "{{ fortios_access_token }}"
+        state: "present"
+        firewall_address:
+          name: "sub_192.168.233.0"
+          subnet: "192.168.233.0 255.255.255.0"
+          allow_routing: "enable"
+
+    - name: Configure SD-WAN settings
+      fortinet.fortios.fortios_system_sdwan:
+        vdom: "{{ vdom }}"
+        access_token: "{{ fortios_access_token }}"
+        system_sdwan:
+          status: "enable"
+          zone:
+            - name: "internet"
+              service_sla_tie_break: "cfg-order"
+
+          members:
+            - seq_num: 1
+              interface: "port2"
+              zone: "internet"
+              status: "enable"
+            - seq_num: 2
+              interface: "port1"
+              zone: "internet"
+              status: "enable"
+
+          health_check:
+            - name: "choose_the_best_link"
+              server: "172.30.0.250"
+              protocol: "ping"
+              members:
+                - seq_num: 1
+                - seq_num: 2
+              sla:
+                - id: 1
+                  latency_threshold: 100
+                  jitter_threshold: 50
+                  packetloss_threshold: 5
+
+          service:
+            - id: 1
+              name: "sd_wan"
+              mode: "priority"
+              dst:
+                - name: "sub_172.30.0.0/24"
+              src:
+                - name: "sub_192.168.233.0"
+              health_check:
+                - name: "choose_the_best_link"
+              priority_members:
+                - seq_num: 1
+                - seq_num: 2
+              priority_zone:
+                - name: "internet"
+              status: "enable"

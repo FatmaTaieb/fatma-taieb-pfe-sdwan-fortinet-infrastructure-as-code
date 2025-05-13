@@ -1,0 +1,25 @@
+---
+- name: Configuration FortiManager
+  hosts: fortimanager
+  connection: httpapi
+  gather_facts: false
+  collections:
+    - fortinet.fortimanager
+
+  vars:
+    ansible_httpapi_use_ssl: yes
+    ansible_httpapi_validate_certs: no
+    ansible_httpapi_port: 443
+
+  tasks:
+    - name: Configuration de l'interface port2
+      fortinet.fortimanager.fmgr_system_interface:
+        state: "present"
+        system_interface:
+          name: "port2"             
+          interface: "port2"      
+          ip: 172.30.0.139/255.255.255.0
+          status: "up"
+          allowaccess: ["ping"]
+          description: "Config via Ansible"
+

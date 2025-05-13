@@ -1,0 +1,26 @@
+---
+- name: Create a script on FortiManager  
+  hosts: iac-fmg  
+  connection: httpapi  
+  gather_facts: no  
+  collections:  
+    - fortinet.fortimanager  
+
+  vars:  
+    ansible_httpapi_use_ssl: true  
+    ansible_httpapi_validate_certs: false  
+    ansible_httpapi_port: 443  
+
+  tasks:  
+    - name: Create a script on FortiManager  
+      fortinet.fortimanager.fmgr_dvmdb_script:  # 
+        adom: "root"  
+        state: "present"  
+        dvmdb_script:  
+          name: "fooscript"  
+          desc: "The script is created via ansible"  
+          type: "cli"  
+          content: |  
+            config system global  
+              set timezone 04  
+            end  

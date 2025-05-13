@@ -1,0 +1,62 @@
+---
+- name: Configure static routes on all FortiGate devices
+  hosts: fortigates
+  connection: httpapi
+  gather_facts: no
+  collections:
+    - fortinet.fortios
+
+  vars:
+    vdom: "root"
+    ansible_httpapi_use_ssl: no
+    ansible_httpapi_validate_certs: no
+    ansible_httpapi_port: 80
+
+  tasks:
+    - name: Configure Hub static routes
+      fortinet.fortios.fortios_router_static:
+        vdom: "{{ vdom }}"
+        access_token: "{{ fortios_access_token }}"
+        state: "present"
+        router_static:
+          seq_num: "{{ item.seq_num }}"
+          dst: "{{ item.dst | default(omit) }}"
+          dstaddr: "{{ item.dstaddr | default(omit) }}"
+          gateway: "{{ item.gateway }}"
+          distance: 1
+          device: "{{ item.device }}"
+      loop:
+        - { seq_num: 1, dst: "192.168.233.0 255.255.255.0", gateway: "172.30.0.129", device: "port2" }
+        - { seq_num: 2, dstaddr: "sub_192.168.233.0", gateway: "6.2.0.254", device: "VPN1" }
+        - { seq_num: 3, dstaddr: "sub_192.168.233.0", gateway: "6.2.3.253", device: "VPN2" }
+      when: inventory_hostname == 'iac-hub'
+
+    - name: Configure Spoke1 static routes
+      fortinet.fortios.fortios_router_static:
+        vdom: "{{ vdom }}"
+        access_token: "{{ fortios_access_token }}"
+        state: "present"
+        router_static:
+          seq_num: "{{ item.seq_num }}"
+          dstaddr: "sub_172.30.0.0/24"
+          distance: 1
+          device: "{{ item.device }}"
+      loop:
+        - { seq_num: 1, device: "HUB1-VPN1" }
+        - { seq_num: 2, device: "HUB1-VPN2" }
+      when: inventory_hostname == 'iac-spk1'
+
+    - name: Configure Spoke2 static routes
+      fortinet.fortios.fortios_router_static:
+        vdom: "{{ vdom }}"
+        access_token: "{{ fortios_access_token }}"
+        state: "present"
+        router_static:
+          seq_num: "{{ item.seq_num }}"
+          dstaddr: "sub_172.30.0.0/24"
+          distance: 1
+          device: "{{ item.device }}"
+      loop:
+        - { seq_num: 1, device: "HUB1-VPN1" }
+        - { seq_num: 2, device: "HUB1-VPN2" }
+      when: inventory_hostname == 'iac-spk2'

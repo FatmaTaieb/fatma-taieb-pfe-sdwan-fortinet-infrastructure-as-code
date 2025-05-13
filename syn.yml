@@ -1,0 +1,43 @@
+---
+- name: Add FortiGate devices and sync them
+  hosts: fortimanagers
+  connection: httpapi
+  gather_facts: false
+
+  vars:
+    adom: "root"
+    devices:
+      - { name: "iac-hub", ip: "172.30.0.250" }
+      - { name: "iac-spk1", ip: "192.168.233.33" }
+      - { name: "iac-spk2", ip: "192.168.233.44" }
+
+  tasks:
+    - name: Discover devices
+      fortinet.fortimanager.fmgr_dvm_cmd_discover_device:
+        dvm_cmd_discover_device:
+          device:
+            adm_usr: "admin"
+            adm_pass: "admin"
+            ip: "{{ item.ip }}"
+      loop: "{{ devices }}"
+      register: discovered
+
+    - name: Add discovered devices
+      fortinet.fortimanager.fmgr_dvm_cmd_add_device:
+        dvm_cmd_add_device:
+          adom: "{{ adom }}"
+          flags:
+            - create_task
+            - nonblocking
+          device:
+            name: "{{ item.item.name }}"
+            ip: "{{ item.item.ip }}"
+            adm_usr: "admin"
+            adm_pass: "admin"
+            desc: "Added via Ansible"
+            mgmt_mode: "fmg"
+      loop: "{{ discovered.results }}"
+
+    - name: Install config to sync devices
+      fortinet.fortimanager.fmgr_securityconsole_install_package:
+        securityconsole_install_package:
