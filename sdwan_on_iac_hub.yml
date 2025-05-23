@@ -1,0 +1,35 @@
+---
+- name: Configure SD-WAN zone and members on iac-hub
+  hosts: iac-hub
+  connection: httpapi
+  gather_facts: no
+  collections:
+    - fortinet.fortios
+
+  vars:
+    vdom: "root"
+    fortitoken: "1w1531bN4kybkQ7cgjxsykcHzqQbHm"
+    ansible_httpapi_use_ssl: no
+    ansible_httpapi_validate_certs: no
+    ansible_httpapi_port: 80
+
+  tasks:
+    - name: Enable SD-WAN and configure zone and members
+      fortinet.fortios.fortios_system_sdwan:
+        vdom: "{{ vdom }}"
+        access_token: "{{ fortitoken }}"
+        system_sdwan:
+          status: "enable"
+          zone:
+            - name: "hub-zone"
+              service_sla_tie_break: "cfg-order"
+
+          members:
+            - seq_num: 1
+              interface: "port1"
+              zone: "hub-zone"
+              status: "enable"
+            - seq_num: 2
+              interface: "port3"
+              zone: "hub-zone"
+              status: "enable"

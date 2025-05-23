@@ -1,0 +1,35 @@
+---
+- name: Create SD-WAN address objects on iac-spk1
+  hosts: iac-spk1
+  connection: httpapi
+  gather_facts: no
+  collections:
+    - fortinet.fortios
+
+  vars:
+    vdom: "root"
+    fortitoken: "dx5Qy3ds66yfqgHNmmw8sthd408mr5"
+    ansible_httpapi_use_ssl: no
+    ansible_httpapi_validate_certs: no
+    ansible_httpapi_port: 80
+
+  tasks:
+    - name: Create firewall address for sub_172.30.0.0/24
+      fortinet.fortios.fortios_firewall_address:
+        vdom: "{{ vdom }}"
+        access_token: "{{ fortitoken }}"
+        state: "present"
+        firewall_address:
+          name: "sub_172.30.0.0/24"
+          subnet: "172.30.0.0 255.255.255.0"
+          allow_routing: "enable"
+
+    - name: Create firewall address for sub_192.168.233.0
+      fortinet.fortios.fortios_firewall_address:
+        vdom: "{{ vdom }}"
+        access_token: "{{ fortitoken }}"
+        state: "present"
+        firewall_address:
+          name: "sub_192.168.233.0"
+          subnet: "192.168.233.0 255.255.255.0"
+          allow_routing: "enable"

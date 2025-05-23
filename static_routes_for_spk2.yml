@@ -1,0 +1,38 @@
+- name: Configure static route on iac-hub to reach 192.168.233.0/24 via SD-WAN zone
+  hosts: iac-spk2
+  connection: httpapi
+  gather_facts: no
+  collections:
+    - fortinet.fortios
+
+  vars:
+    vdom: "root"
+    fortitoken: "9xrm79Hsgqm4mpp7tndykH697bfswq"
+    ansible_httpapi_use_ssl: no
+    ansible_httpapi_validate_certs: no
+    ansible_httpapi_port: 80
+
+  tasks:
+    - name: Configure IPv4 static routing with SD-WAN zone
+      fortinet.fortios.fortios_router_static:
+        access_token: "{{ fortitoken }}"
+        vdom: "{{ vdom }}"
+        state: present
+        router_static:
+          bfd: "disable"
+          blackhole: "disable"
+          comment: "Route to spokes LAN via SD-WAN"
+          distance: 10
+          dst: "172.30.0.0/24"
+          dynamic_gateway: "disable"
+          internet_service: "0"
+          link_monitor_exempt: "disable"
+          priority: 1
+          sdwan: "enable"
+          sdwan_zone:
+            - name: "internet"  # <== Replace with actual SD-WAN zone name
+          seq_num: 100
+          status: "enable"
+          virtual_wan_link: "enable"
+          vrf: "0"
+          weight: 10

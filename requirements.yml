@@ -1,4 +1,8 @@
 collections:
   - name: fortinet.fortimanager
-    version: "2.9.1"
+
+  - name: fortinet.fortios
+   
   - name: community.general
+    version: "8.5.0"  # optionnel mais recommandé de versionner
+

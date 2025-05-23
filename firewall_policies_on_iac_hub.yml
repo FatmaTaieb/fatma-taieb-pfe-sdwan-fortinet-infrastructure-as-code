@@ -1,0 +1,63 @@
+- name: Configure LAN <--> SD-WAN firewall policies on iac-hub
+  hosts: iac-hub
+  connection: httpapi
+  gather_facts: no
+  collections:
+    - fortinet.fortios
+
+  vars:
+    vdom: "root"
+    fortitoken: "1w1531bN4kybkQ7cgjxsykcHzqQbHm"
+    ansible_httpapi_use_ssl: no
+    ansible_httpapi_validate_certs: no
+    ansible_httpapi_port: 80
+
+  tasks:
+    - name: Create LAN to SD-WAN policy
+      fortinet.fortios.fortios_firewall_policy:
+        access_token: "{{ fortitoken }}"
+        vdom: "{{ vdom }}"
+        state: present
+        firewall_policy:
+          policyid: 1
+          name: "lan_to_sdwan"
+          srcintf:
+            - name: "port2"
+          dstintf:
+            - name: "hub-zone"
+          srcaddr:
+            - name: "HUB_NET"
+          dstaddr:
+            - name: "LAN_SPOKES"
+          action: "accept"
+          schedule: "always"
+          service:
+            - name: "ALL"
+          nat: "disable"
+          logtraffic: "all"
+          ippool: "disable"
+
+    - name: Create SD-WAN to LAN reverse policy
+      fortinet.fortios.fortios_firewall_policy:
+        access_token: "{{ fortitoken }}"
+        vdom: "{{ vdom }}"
+        state: present
+        firewall_policy:
+          policyid: 2
+          name: "sdwan_to_lan"
+          srcintf:
+            - name: "hub-zone"
+          dstintf:
+            - name: "port2"
+          srcaddr:
+            - name: "LAN_SPOKES"
+          dstaddr:
+            - name: "HUB_NET"
+          action: "accept"
+          schedule: "always"
+          service:
+            - name: "ALL"
+          nat: "disable"
+          logtraffic: "all"
+          ippool: "disable"
+          comments: "(Reverse of lan_to_sdwan)"

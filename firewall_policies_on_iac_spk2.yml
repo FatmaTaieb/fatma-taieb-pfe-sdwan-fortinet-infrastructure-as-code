@@ -1,5 +1,4 @@
----
-- name: Configure Spoke 1 (iac-spk2) firewall policies
+- name: Configure LAN <--> SD-WAN firewall policies on iac-spk1
   hosts: iac-spk2
   connection: httpapi
   gather_facts: no
@@ -8,52 +7,56 @@
 
   vars:
     vdom: "root"
+    fortitoken: "9xrm79Hsgqm4mpp7tndykH697bfswq"
     ansible_httpapi_use_ssl: no
     ansible_httpapi_validate_certs: no
     ansible_httpapi_port: 80
 
   tasks:
-    - name: Configure spoke_to_hub policy 
+    - name: Create LAN to SD-WAN policy
       fortinet.fortios.fortios_firewall_policy:
+        access_token: "{{ fortitoken }}"
         vdom: "{{ vdom }}"
-        access_token: "{{ fortios_access_token }}"
-        state: "present"
+        state: present
         firewall_policy:
-          policyid: 1
-          name: "spoke_to_hub"
+          policyid: 1003
+          name: "lan_to_sdwan"
           srcintf:
             - name: "port3"
           dstintf:
-            - name: "HUB1"
-          action: "accept"
+            - name: "internet"
           srcaddr:
             - name: "sub_192.168.233.0"
           dstaddr:
             - name: "sub_172.30.0.0/24"
+          action: "accept"
           schedule: "always"
           service:
             - name: "ALL"
+          nat: "disable"
           logtraffic: "disable"
+          ippool: "disable"
 
-    - name: Configure hub_to_spoke policy2 
+    - name: Create SD-WAN to LAN reverse policy
       fortinet.fortios.fortios_firewall_policy:
+        access_token: "{{ fortitoken }}"
         vdom: "{{ vdom }}"
-        access_token: "{{ fortios_access_token }}"
-        state: "present"
+        state: present
         firewall_policy:
-          policyid: 2
-          name: "hub_to_spoke"
+          policyid: 1004
+          name: "loinn des erreurs"
           srcintf:
-            - name: "HUB1"
+            - name: "internet"
           dstintf:
             - name: "port3"
-          action: "accept"
           srcaddr:
             - name: "sub_172.30.0.0/24"
           dstaddr:
             - name: "sub_192.168.233.0"
+          action: "accept"
           schedule: "always"
           service:
             - name: "ALL"
-          utm_status: "enable"
+          nat: "disable"
           logtraffic: "disable"
+          ippool: "disable"

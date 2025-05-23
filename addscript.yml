@@ -13,7 +13,7 @@
 
   tasks:  
     - name: Create a script on FortiManager  
-      fortinet.fortimanager.fmgr_dvmdb_script:  # 
+      fortinet.fortimanager.fmgr_dvmdb_script:   
         adom: "root"  
         state: "present"  
         dvmdb_script:  
